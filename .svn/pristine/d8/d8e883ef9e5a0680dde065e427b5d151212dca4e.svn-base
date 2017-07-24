@@ -1,0 +1,53 @@
+package springSC.web.service;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+
+
+
+
+
+
+
+
+
+
+import org.springframework.stereotype.Service;
+
+import jade.core.Profile;
+import jade.core.ProfileImpl;
+import jade.core.Runtime;
+import jade.wrapper.AgentContainer;
+import jade.wrapper.AgentController;
+import jade.wrapper.ControllerException;
+
+@Service
+public class StartAgent {
+	
+	public void startAgent(int anum, ArrayList<String> agentname,
+			ArrayList<String> agentclass, Object[][] objects ) throws ControllerException{
+				
+		Runtime rt=Runtime.instance();
+		
+		Profile pMain=new ProfileImpl(null,1234,null);
+		
+		AgentContainer container = rt.createMainContainer(pMain);
+		
+		String s=new String("*");
+		
+		AgentController controller3= container.createNewAgent("mySniffer", "jade.tools.sniffer.Sniffer",null);
+		controller3.start();
+		
+		AgentController controller= container.createNewAgent("rma", "jade.tools.rma.rma", new Object[]{s});
+		controller.start();
+		for (int i = 0; i <anum; i++) {
+			AgentController controller1= container.createNewAgent(agentname.get(i),agentclass.get(i),  objects[i]);
+			controller1.start();
+		}
+	}
+
+	
+	
+
+	
+}

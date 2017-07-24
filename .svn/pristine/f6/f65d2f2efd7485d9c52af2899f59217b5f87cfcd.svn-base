@@ -1,0 +1,55 @@
+package springSC.web.entity;
+
+import java.io.Serializable;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+import org.hibernate.annotations.GenericGenerator;
+import org.springframework.format.annotation.DateTimeFormat;
+
+import sun.util.calendar.BaseCalendar.Date;
+
+@Entity
+@Table(name="orderbill")
+public class OrderBillEntity implements Serializable  {
+	@Id
+	@GeneratedValue(generator = "system-uuid")
+	@GenericGenerator(name = "system-uuid", strategy = "uuid")	
+	String id;
+	
+	@Column(length=100)
+	String orderitem;
+	
+	@Column(length=100)
+	
+	String orderdate;
+	
+	public String getId() {
+		return id;
+	}
+
+	public void setId(String id) {
+		this.id = id;
+	}
+
+	public String getOrderitem() {
+		return orderitem;
+	}
+
+	public void setOrderitem(String orderitem) {
+		this.orderitem = orderitem;
+	}
+
+	public String getOrderdate() {
+		return orderdate;
+	}
+
+	public void setOrderdate(String orderdate) {
+		this.orderdate = orderdate;
+	}
+	
+}

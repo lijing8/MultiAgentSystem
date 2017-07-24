@@ -1,0 +1,43 @@
+package springSC.web.service;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import springSC.web.dao.MaterialDAO;
+import springSC.web.entity.ItemEntity;
+import springSC.web.entity.MaterialEntity;
+
+
+@Service
+public class MaterialService {
+
+	@Autowired
+	private MaterialDAO materialDAO;
+	
+	public List<MaterialEntity> getAllMaterial() {
+		return materialDAO.getAllMaterial();
+	}
+	//添加物料
+	public void addMaterial(String Mname,int Mnum){
+		
+			MaterialEntity materialEntity=new MaterialEntity();
+			materialEntity.setMname(Mname);
+			materialEntity.setMnum(Mnum);
+			materialDAO.addMaterial(materialEntity);
+			
+	}
+	//删除
+	public boolean delMaterial(String id){
+		return materialDAO.delMaterial(id);
+	}
+	//修改数据
+	public boolean updataMaterial(MaterialEntity materialEntity){
+		return materialDAO.updataMaterial(materialEntity);
+	}
+	
+	public MaterialEntity getMaterial(String id) {
+		return materialDAO.getMaterial(id);
+	}
+}

@@ -1,0 +1,64 @@
+package springSC.web.dao;
+
+import java.util.List;
+
+import javax.annotation.Resource;
+import javax.transaction.Transactional;
+
+import org.hibernate.Query;
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
+
+import springSC.web.entity.MaterialEntity;
+
+@Repository
+@Transactional(rollbackOn = Exception.class)
+public class MaterialDAO {
+	@Autowired
+	private SessionFactory sessionFactory;
+	
+	public List<MaterialEntity> getAllMaterial() {
+		String hql = "from MaterialEntity";
+		Query query = sessionFactory.getCurrentSession().createQuery(hql);	
+		return query.list();
+	}
+	//添加物料
+	public void addMaterial(MaterialEntity materialEntity){
+		
+		sessionFactory.getCurrentSession().save(materialEntity);
+	}
+	//删除
+	public boolean delMaterial(String id){
+		 String hql = "delete MaterialEntity material where material.mid=?";  
+	     Query query = sessionFactory.getCurrentSession().createQuery(hql);  
+	     query.setString(0, id);  
+	     return (query.executeUpdate() > 0);  
+	}
+	//修改数据
+	public boolean updataMaterial(MaterialEntity materialEntity){
+		String hql = "update MaterialEntity material set material.mname=?,material.mnum=? where material.mid=?";  
+        Query query = sessionFactory.getCurrentSession().createQuery(hql);  
+        query.setString(0, materialEntity.getMname());  
+        query.setString(2, materialEntity.getMid()); 
+        query.setLong(1, materialEntity.getMnum());  
+       
+        return (query.executeUpdate() > 0);  
+	}
+	public MaterialEntity getMaterial(String id) {
+		String hql="from MaterialEntity material where material.mid=?";
+		Query query=sessionFactory.getCurrentSession().createQuery(hql);
+		query.setString(0, id);
+		return (MaterialEntity)query.uniqueResult();
+	}
+	
+	//修改库存
+	public boolean updataMaterialnum(MaterialEntity materialEntity){
+		String hql = "update MaterialEntity material set material.mnum=? where material.mid=?";  
+        Query query = sessionFactory.getCurrentSession().createQuery(hql);  
+        query.setLong(2, materialEntity.getMnum());  
+       
+        return (query.executeUpdate() > 0);  
+	}
+	
+}

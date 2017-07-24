@@ -1,0 +1,59 @@
+package springSC.web.agent;
+
+import org.springframework.stereotype.Service;
+
+import jade.core.Agent;
+import jade.core.Profile;
+import jade.core.ProfileImpl;
+import jade.core.Runtime;
+import jade.core.behaviours.ParallelBehaviour;
+import jade.core.behaviours.TickerBehaviour;
+import jade.wrapper.AgentContainer;
+import jade.wrapper.AgentController;
+import jade.wrapper.ControllerException;
+
+@Service
+public class MyparallelAgent extends Agent{
+	private  int nums=20;
+	protected void  setup() {
+		ParallelBehaviour pb=new ParallelBehaviour(this,ParallelBehaviour.WHEN_ALL);
+		pb.addSubBehaviour(new TickerBehaviour(this,1000) {
+			
+			@Override
+			protected void onTick() {
+				if (nums>0) {
+				System.out.println(Thread.currentThread().getName()+" 1  正在出售第   "+nums+" 票");
+				nums--;
+				}else {
+					myAgent.doDelete();
+				}
+			}
+		});
+		pb.addSubBehaviour(new TickerBehaviour(this,1500) {
+			
+			@Override
+			protected void onTick() {
+				if (nums>0) {
+				System.out.println(Thread.currentThread().getName()+" 2  正在出售第   "+nums+" 票");
+				nums--;
+				}else {
+					myAgent.doDelete();
+				}
+		}});
+		pb.addSubBehaviour(new TickerBehaviour(this,1000) {
+			
+			@Override
+			protected void onTick() {
+				if (nums>0) {
+				System.out.println(Thread.currentThread().getName()+" 3  正在出售第   "+nums+" 票");
+				nums--;
+				}else {
+					myAgent.doDelete();
+				}
+			}
+		});
+		this.addBehaviour(pb);
+		System.out.println("this is an agent!!!");
+	}
+	}
+

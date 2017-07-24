@@ -1,0 +1,153 @@
+package springSC.web.agent;
+
+import java.io.IOException;
+
+
+import springSC.web.entity.MaterialEntity;
+import springSC.web.entity.OrderItemEntity;
+import jade.core.AID;
+import jade.core.Agent;
+import jade.core.behaviours.Behaviour;
+import jade.core.behaviours.CyclicBehaviour;
+import jade.core.behaviours.FSMBehaviour;
+import jade.core.behaviours.OneShotBehaviour;
+import jade.core.behaviours.ParallelBehaviour;
+import jade.core.behaviours.SenderBehaviour;
+import jade.core.behaviours.SimpleBehaviour;
+import jade.core.behaviours.TickerBehaviour;
+import jade.core.behaviours.WakerBehaviour;
+import jade.domain.FIPAAgentManagement.ServiceDescription;
+import jade.lang.acl.ACLMessage;
+import jade.lang.acl.UnreadableException;
+/*
+ * 该类为制造商agent，定时检测物料库存，若库存不足则制定相应的物料订单，发送订单消息给供应商，来补充库存
+ */
+public class ManuAgent extends Agent {
+	
+	public void setup(){
+		System.out.println("ManuAgent has been started!!!");
+		//后续可以修改参数为可变的，通过ACLMessage传递参数规定数组的长度
+		int  m=this.getArguments().length;
+		Object[] ob=new MaterialEntity[m];
+				ob=this.getArguments();
+		System.out.println(m);
+		MaterialEntity[] materialEntities=new MaterialEntity[m];
+		for (int i = 0; i < m; i++) {
+			materialEntities[i]=(MaterialEntity) ob[i];
+			System.out.println("第"+i+"种材料是       "+materialEntities[i].getMname());
+		}
+			
+		//物料种类
+		//int m=materialEntities.length;
+		OrderItemEntity[] orderlist = new OrderItemEntity[m]; 
+		
+		//定时检查库存
+		WakerBehaviour checkBehaviour =new WakerBehaviour(this,3000) {
+			//int Mnum=(int)(Math.random()*100+1);
+			//有限状态机转换参数
+			int i=0;			
+			//库存量
+			int num;		
+			protected void onWake() {		
+				//检查库存	
+				for (int j = 0; j <m; j++) {	
+					
+				if (num<=50) {
+					//库存不足				
+					 i =1;
+					 //补货单					
+					num=materialEntities[j].getMnum();	
+					orderlist[j]=new OrderItemEntity();
+					orderlist[j].setId(materialEntities[j].getMid());
+					orderlist[j].setName(materialEntities[j].getMname());
+					orderlist[j].setNum(70-num);
+					System.out.println(materialEntities[j].getMname()+"库存不足！！");	
+					
+				}else {					 
+					System.out.println(materialEntities[j].getMname()+"库存充裕!!!");
+				}
+			
+				}
+		}
+		public int onEnd(){
+				
+				return i;
+			}	
+		};
+		
+		
+		//若库存不足向供应商发送消息
+		ACLMessage msg =new ACLMessage(ACLMessage.CFP);
+
+		//添加供应商为接收者
+		msg.addReceiver(new AID("supplier",AID.ISLOCALNAME));
+		try {
+			msg.setContentObject(orderlist);
+			msg.setContent("orderlist.length");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		//msg.setContent("需要补货 ！");
+		SenderBehaviour senderBehaviour = new SenderBehaviour(this, msg );
+		OneShotBehaviour activeBehaviour=new OneShotBehaviour() {
+			
+			@Override
+			public void action() {
+				// TODO Auto-generated method stub
+				System.out.println("中间状态");
+			}
+		};
+		FSMBehaviour fsmBehaviour=new FSMBehaviour(this);
+		fsmBehaviour.registerFirstState(checkBehaviour, "check");
+		fsmBehaviour.registerLastState(senderBehaviour, "sender");
+		fsmBehaviour.registerState(activeBehaviour, "active");
+		fsmBehaviour.registerTransition("check", "sender", 1);
+		fsmBehaviour.registerTransition("check", "active", 0);
+		fsmBehaviour.registerDefaultTransition("active",  "check", new String[]{ "check","active"});
+		//this.addBehaviour(fsmBehaviour);	
+		
+		//定义一个循环行为用于相应销售商的agent订单请求
+		Behaviour manureceiver =new CyclicBehaviour() {
+			public void action() {
+				ACLMessage msgseller=receive();
+				if (msgseller==null) {
+					block();
+				}else {
+					try {
+						String lengthstr=msgseller.getContent();
+						Object itemorder= msgseller.getContentObject();
+						OrderItemEntity o1[]=new OrderItemEntity[Integer.parseInt(lengthstr)];
+						
+						if (itemorder instanceof OrderItemEntity[]) {
+							//修改数组的界限最好是以参数的形式传递过来
+							o1 =(OrderItemEntity[]) itemorder;
+		 				for (int j = 0; j < o1.length; j++) {
+						
+							System.out.println(o1[j].getName());
+						}
+						}
+						else {
+							System.out.println("捕获失败");
+						}
+						
+					} catch (UnreadableException e) {
+						e.printStackTrace();
+					}
+					
+				}
+				
+			}
+		};
+	//	this.addBehaviour(manureceiver);
+		
+		ParallelBehaviour paralle=new ParallelBehaviour(this,ParallelBehaviour.WHEN_ALL) ;
+		paralle.addSubBehaviour(fsmBehaviour);
+		paralle.addSubBehaviour(manureceiver);
+		this.addBehaviour(paralle);
+		System.out.println("执行完毕");
+	}
+	
+	
+
+}
+

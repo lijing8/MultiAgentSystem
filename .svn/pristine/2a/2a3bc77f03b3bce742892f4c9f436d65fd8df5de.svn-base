@@ -1,0 +1,40 @@
+package springSC.web.service;
+
+import java.util.List;
+
+import org.hibernate.Query;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import springSC.web.dao.OrderBillDAO;
+import springSC.web.entity.OrderBillEntity;
+import springSC.web.entity.OrderItemEntity;
+import sun.util.calendar.BaseCalendar.Date;
+
+@Service
+public class OrderBillService {
+	@Autowired
+	private OrderBillDAO orderBillDAO;
+	public List<OrderBillEntity> getAllOrderBill(){
+		return orderBillDAO.getAllOrderBill();
+		
+	}
+	public void addOrderBill(String orderItem,String orderDate){
+		OrderBillEntity orderBillEntity=new OrderBillEntity();
+		orderBillEntity.setOrderitem(orderItem);
+		orderBillEntity.setOrderdate(orderDate);
+		orderBillDAO.addOrderBill(orderBillEntity);
+			
+		}
+	public Boolean delOrderBill(String id){
+		return orderBillDAO.delOrderBill(id);
+		
+	}	
+	public OrderBillEntity getOrderBill(String id) {
+	
+		return orderBillDAO.getOrderBill(id);
+	}
+	public void updateOrderBill(String id){
+		
+	}
+}

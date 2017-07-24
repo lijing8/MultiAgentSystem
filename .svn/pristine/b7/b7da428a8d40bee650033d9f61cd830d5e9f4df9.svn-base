@@ -1,0 +1,40 @@
+package springSC.web.service;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import springSC.web.dao.OrderItemDAO;
+import springSC.web.entity.OrderItemEntity;
+
+@Service
+public class OrderItemService {
+	@Autowired
+	private OrderItemDAO orderItemDAO;
+	
+	public List<OrderItemEntity> getAllMaterial() {
+		return orderItemDAO.getAllOrderItem();
+	}
+	//添加物料
+	public void addOrderItem(String name,int num){
+		
+			OrderItemEntity orderItemEntity=new OrderItemEntity();
+			orderItemEntity.setName(name);
+			orderItemEntity.setNum(num);
+			orderItemDAO.addOrderItem(orderItemEntity);
+			
+	}
+	//删除
+	public boolean delOrderItem(String id){
+		return orderItemDAO.delOrderItem(id);
+	}
+	//修改数据
+	public boolean updataOrderItem(OrderItemEntity orderItemEntity){
+		return orderItemDAO.updataOrderItem(orderItemEntity);
+	}
+	
+	public OrderItemEntity getOrderItem(String id) {
+		return orderItemDAO.getOrderItem(id);
+	}
+}

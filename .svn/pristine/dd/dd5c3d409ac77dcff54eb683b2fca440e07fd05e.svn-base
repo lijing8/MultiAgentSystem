@@ -1,0 +1,246 @@
+package multiagent.agents;
+
+import java.util.Date;
+import java.util.Vector;
+
+import multiagent.AchieveREUtil;
+import jade.core.AID;
+import jade.core.Agent;
+import jade.core.behaviours.Behaviour;
+import jade.core.behaviours.CyclicBehaviour;
+import jade.core.behaviours.SenderBehaviour;
+import jade.core.behaviours.SimpleBehaviour;
+import jade.domain.FIPANames;
+import jade.domain.FIPAAgentManagement.FailureException;
+import jade.domain.FIPAAgentManagement.NotUnderstoodException;
+import jade.domain.FIPAAgentManagement.RefuseException;
+import jade.lang.acl.ACLMessage;
+import jade.lang.acl.MessageTemplate;
+import jade.proto.AchieveREInitiator;
+
+public class CloudsimuAgent extends Agent  {
+	@SuppressWarnings("deprecation")
+	protected void setup(){
+
+	
+		Behaviour loop =new CyclicBehaviour() {
+
+			@SuppressWarnings("serial")
+			@Override
+			public void action() {
+				// TODO Auto-generated method stub
+				
+				ACLMessage msg =receive();
+				if (msg!=null) {
+					String agentAID=msg.getSender().toString();
+					//判断消息的来源，是Manu的material_trade，或者是supply的供应消息material_trade
+					if (agentAID.indexOf("Manu")!=-1||
+							(agentAID.indexOf("supply")!=-1 && msg.getConversationId()=="material_trade")) {
+						System.out.println("Cloud:"+"我接收到了"+msg.getSender()+"一条消息："+msg.getContent());
+						//添加消息模板
+						ACLMessage msg1 =new ACLMessage(ACLMessage.REQUEST);
+						//AID r=new AID("Manu@192.168.1.123:1099/JADE");
+						//r.addAddresses("http://han-PC:7778/acc");
+						//msg1.addReceiver(r);
+						
+						//向supply提出需求，在此可运用黄页获取多个制造商，进行沟通，向多个制造商发送消息
+						msg1.addReceiver(new AID("supply",AID.ISLOCALNAME));
+						msg1.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
+						msg1.setConversationId("material_trade");
+						//在10秒内收到回复
+						msg1.setReplyByDate(new Date(System.currentTimeMillis() + 2000));
+						msg1.setContent("give 100 material  to Manu");
+						//发起交互，并处理消息，处理过程中将消息转发给Manu
+						//new AchieveREUtil(msg, myAgent, msg1);					
+						new AchieveREInitiator(myAgent, msg1){
+							protected void handleInform(ACLMessage inform) {
+								System.out.println("Agent "+inform.getSender().getName()+" successfully performed the requested action");
+								//向seller回复结果
+								ACLMessage information=msg.createReply();
+								information.setPerformative(ACLMessage.INFORM);
+								send(information);
+							}
+							protected void handleRefuse(ACLMessage refuse) {
+								System.out.println("Agent "+refuse.getSender().getName()+" refused to perform the requested action");
+								//nResponders--;
+								ACLMessage refuseinf=msg.createReply();
+								refuseinf.setPerformative(ACLMessage.REFUSE);
+								send(refuseinf);
+							}
+							protected void handleFailure(ACLMessage failure) {
+								if (failure.getSender().equals(myAgent.getAMS())) {
+									// FAILURE notification from the JADE runtime: the receiver
+									// does not exist
+									System.out.println("Responder does not exist");
+									ACLMessage failureinf=msg.createReply();
+									failureinf.setPerformative(ACLMessage.FAILURE);
+									failureinf.setContent("Responder does not exist");
+									send(failureinf);
+								
+								}
+								else {
+									System.out.println("Agent "+failure.getSender().getName()+" failed to perform the requested action");
+									ACLMessage failureinf=msg.createReply();
+									failureinf.setPerformative(ACLMessage.FAILURE);
+									failureinf.setContent("执行任务失败");
+									send(failureinf);
+								
+								}
+							}
+							protected void handleAllResultNotifications(Vector notifications) {
+								//if (notifications.size() < nResponders) {
+									// Some responder didn't reply within the specified timeout
+								//	System.out.println("Timeout expired: missing "+(nResponders - notifications.size())+" responses");
+								//}
+							}
+						};					
+						
+					}else if (agentAID.indexOf("Seller")!=-1||
+							(agentAID.indexOf("Manu")!=-1 && msg.getConversationId()=="item_trade")) {
+						//判断是否是零售商的消息或者是来自Manu的关于成品采购的消息
+						System.out.println("Cloud:"+"我接收到了"+msg.getSender()+"一条消息："+msg.getContent());
+						//添加消息模板
+						
+							
+						ACLMessage msg1 =new ACLMessage(ACLMessage.REQUEST);
+						//AID r=new AID("Manu@192.168.1.123:1099/JADE");
+						//r.addAddresses("http://han-PC:7778/acc");
+						//msg1.addReceiver(r);
+						//向制造商提出需求，在此可运用黄页获取多个制造商，进行沟通，向多个制造商发送消息
+						msg1.addReceiver(new AID("Manu",AID.ISLOCALNAME));
+						msg1.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
+						msg1.setConversationId("item_trade");
+						//在10秒内收到回复
+						msg1.setReplyByDate(new Date(System.currentTimeMillis() + 10000));
+						msg1.setContent("give seller 100 Cars");
+						//发起交互，并处理消息，处理过程中将消息转发给seller
+						//new AchieveREUtil(msg, this, msg1);					
+						new AchieveREInitiator(myAgent, msg1){
+							protected void handleInform(ACLMessage inform) {
+								System.out.println("Agent "+inform.getSender().getName()+" successfully performed the requested action");
+								//向seller回复结果
+								ACLMessage information=msg.createReply();
+								information.setPerformative(ACLMessage.INFORM);
+								send(information);
+							}
+							protected void handleRefuse(ACLMessage refuse) {
+								System.out.println("Agent "+refuse.getSender().getName()+" refused to perform the requested action");
+								//nResponders--;
+								ACLMessage refuseinf=msg.createReply();
+								refuseinf.setPerformative(ACLMessage.REFUSE);
+								send(refuseinf);
+							}
+							protected void handleFailure(ACLMessage failure) {
+								if (failure.getSender().equals(myAgent.getAMS())) {
+									// FAILURE notification from the JADE runtime: the receiver
+									// does not exist
+									System.out.println("Responder does not exist");
+									ACLMessage failureinf=msg.createReply();
+									failureinf.setPerformative(ACLMessage.FAILURE);
+									failureinf.setContent("Responder does not exist");
+									send(failureinf);
+								
+								}
+								else {
+									System.out.println("Agent "+failure.getSender().getName()+" failed to perform the requested action");
+									ACLMessage failureinf=msg.createReply();
+									failureinf.setPerformative(ACLMessage.FAILURE);
+									failureinf.setContent("执行任务失败");
+									send(failureinf);
+								
+								}
+							}
+							protected void handleAllResultNotifications(Vector notifications) {
+								//if (notifications.size() < nResponders) {
+									// Some responder didn't reply within the specified timeout
+								//	System.out.println("Timeout expired: missing "+(nResponders - notifications.size())+" responses");
+								//}
+							}
+						};
+						
+						
+					}else {
+						block();
+					}	
+				}
+			}
+			
+		};
+		
+		this.addBehaviour(loop);
+
+		
+	}
+}
+class ReBehaviour extends SimpleBehaviour {
+
+	  boolean finish=false;
+	  Agent a=null;
+	  int fsmparameter=0;
+	  public ReBehaviour() {
+	    super();
+	  }
+
+	  public ReBehaviour(Agent a) {
+	    super(a);
+	    this.a=a;
+	  }
+
+	 public void  action() {
+		 ACLMessage msg =a.receive();
+			if (msg!=null) {
+				String agentAID=msg.getSender().toString();
+				//判断消息的来源，是Manu的material_trade，或者是supply的供应消息material_trade
+				if (agentAID.indexOf("Manu")!=-1||
+						(agentAID.indexOf("supply")!=-1 && msg.getConversationId()=="material_trade")) {
+					System.out.println("Cloud:"+"我接收到了"+msg.getSender()+"一条消息："+msg.getContent());
+					finish=true;
+					fsmparameter=1;
+					//添加消息模板
+					ACLMessage msg1 =new ACLMessage(ACLMessage.REQUEST);
+					//AID r=new AID("Manu@192.168.1.123:1099/JADE");
+					//r.addAddresses("http://han-PC:7778/acc");
+					//msg1.addReceiver(r);
+					
+					//向supply提出需求，在此可运用黄页获取多个制造商，进行沟通，向多个制造商发送消息
+					msg1.addReceiver(new AID("supply",AID.ISLOCALNAME));
+					msg1.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
+					msg1.setConversationId("material_trade");
+					//在10秒内收到回复
+					msg1.setReplyByDate(new Date(System.currentTimeMillis() + 2000));
+					msg1.setContent("give 100 material  to Manu");
+					
+					
+				}else if (agentAID.indexOf("Seller")!=-1||
+						(agentAID.indexOf("Manu")!=-1 && msg.getConversationId()=="item_trade")) {
+					finish=true;
+					fsmparameter=2;
+					//判断是否是零售商的消息或者是来自Manu的关于成品采购的消息
+					System.out.println("Cloud:"+"我接收到了"+msg.getSender()+"一条消息："+msg.getContent());
+					//添加消息模板
+					
+						
+					ACLMessage msg1 =new ACLMessage(ACLMessage.REQUEST);
+					//AID r=new AID("Manu@192.168.1.123:1099/JADE");
+					//r.addAddresses("http://han-PC:7778/acc");
+					//msg1.addReceiver(r);
+					//向制造商提出需求，在此可运用黄页获取多个制造商，进行沟通，向多个制造商发送消息
+					msg1.addReceiver(new AID("Manu",AID.ISLOCALNAME));
+					msg1.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
+					msg1.setConversationId("item_trade");
+					//在10秒内收到回复
+					msg1.setReplyByDate(new Date(System.currentTimeMillis() + 10000));
+					msg1.setContent("give seller 100 Cars");
+					//发起交互，并处理消息，处理过程中将消息转发给seller
+					//new AchieveREUtil(msg, this, msg1);
+				}else {
+					block();
+				}	
+			}
+	}
+	  public final boolean done() {
+	    
+		return finish;
+	  }
+
+	}

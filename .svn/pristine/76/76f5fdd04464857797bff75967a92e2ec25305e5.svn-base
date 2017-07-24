@@ -1,0 +1,77 @@
+package multiagent.agents;
+
+import jade.core.AID;
+import jade.core.Agent;
+import jade.core.behaviours.Behaviour;
+import jade.core.behaviours.CyclicBehaviour;
+import jade.core.behaviours.SenderBehaviour;
+import jade.domain.FIPANames;
+import jade.domain.FIPAAgentManagement.FailureException;
+import jade.domain.FIPAAgentManagement.NotUnderstoodException;
+import jade.domain.FIPAAgentManagement.RefuseException;
+import jade.lang.acl.ACLMessage;
+import jade.lang.acl.MessageTemplate;
+import jade.proto.AchieveREResponder;
+
+public class Supply extends Agent{
+	protected void setup(){
+		MessageTemplate mt=MessageTemplate.and(
+				MessageTemplate.and(MessageTemplate.MatchProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST), 
+						MessageTemplate.MatchPerformative(ACLMessage.REQUEST)),MessageTemplate.MatchConversationId("material_trade"));
+		
+		Behaviour responderBehaviour=new AchieveREResponder(this, mt){		
+			protected ACLMessage prepareResponse(ACLMessage request) throws NotUnderstoodException, RefuseException {
+				
+				System.out.println("supply:"+"Agent "+getLocalName()+": REQUEST received from "+request.getSender().getName()+". Action is "+request.getContent());
+				if (checkAction()) {
+					// We agree to perform the action. Note that in the FIPA-Request
+					// protocol the AGREE message is optional. Return null if you
+					// don't want to send it.
+					System.out.println("supply:"+"Agent "+getLocalName()+": Agree");
+					ACLMessage agree = request.createReply();
+					agree.setPerformative(ACLMessage.AGREE);
+					agree.setConversationId("material_trade");
+					return agree;
+				}
+				else {
+					// We refuse to perform the action
+					System.out.println("supply:"+"Agent "+getLocalName()+": Refuse");
+					//throw new RefuseException("check-failed");
+					ACLMessage Refuse = request.createReply();
+					Refuse.setPerformative(ACLMessage.REFUSE);
+					Refuse.setConversationId("material_trade");
+					return Refuse;
+				}
+			}
+			
+			protected ACLMessage prepareResultNotification(ACLMessage request, ACLMessage response) throws FailureException {
+				if (performAction()) {
+					System.out.println("supply:"+"Agent "+getLocalName()+": Action successfully performed");
+					ACLMessage inform = request.createReply();
+					inform.setPerformative(ACLMessage.INFORM);
+					inform.setConversationId("material_trade");
+					return inform;
+				}
+				else {
+					System.out.println("supply:"+"Agent "+getLocalName()+": Action failed");
+					ACLMessage failed = request.createReply();
+					failed.setPerformative(ACLMessage.FAILURE);
+					failed.setConversationId("material_trade");
+					return failed;
+					//throw new FailureException("unexpected-error");
+				}	
+			}
+			
+		};
+		this.addBehaviour(responderBehaviour);
+	}
+	private boolean checkAction() {
+	  	//是否同意
+	 return (Math.random() > 0.2);
+	}
+	  
+	private boolean performAction() {
+	  	// 是够能够供应
+ 	return (Math.random() > 0.2);
+	}
+}

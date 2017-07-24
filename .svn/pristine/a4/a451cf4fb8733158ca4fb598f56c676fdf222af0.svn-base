@@ -1,0 +1,53 @@
+package springSC.web.dao;
+
+import java.util.List;
+
+import javax.transaction.Transactional;
+
+import org.hibernate.Query;
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
+
+import springSC.web.entity.ItemEntity;
+
+@Repository
+@Transactional(rollbackOn = Exception.class)
+public class ItemDAO {
+	@Autowired
+	private SessionFactory sessionFactory;
+	
+	public List<ItemEntity> getAllItem() {
+		String hql = "from ItemEntity";
+		Query query = sessionFactory.getCurrentSession().createQuery(hql);	
+		return query.list();
+	}
+	//添加物料
+	public void addItem(ItemEntity itemEntity){
+		
+		sessionFactory.getCurrentSession().save(itemEntity);
+	}
+	//删除
+	public boolean delItem(String id){
+		 String hql = "delete ItemEntity item where item.iid=?";  
+	     Query query = sessionFactory.getCurrentSession().createQuery(hql);  
+	     query.setString(0, id);  
+	     return (query.executeUpdate() > 0);  
+	}
+	//修改数据
+	public boolean updataItem(ItemEntity itemEntity){
+		String hql = "update ItemEntity item set item.iname=?,item.inum=? where item.iid=?";  
+        Query query = sessionFactory.getCurrentSession().createQuery(hql);  
+        query.setString(0, itemEntity.getIname());  
+        query.setLong(1, itemEntity.getInum());  
+        query.setString(2, itemEntity.getIid());
+        int i=query.executeUpdate();
+        return (i > 0);  
+	}
+	public ItemEntity getItem(String id) {
+		String hql="from ItemEntity item where item.iid=?";
+		Query query=sessionFactory.getCurrentSession().createQuery(hql);
+		query.setString(0, id);
+		return (ItemEntity)query.uniqueResult();
+	}
+}

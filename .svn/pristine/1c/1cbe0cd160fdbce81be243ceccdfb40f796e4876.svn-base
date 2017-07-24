@@ -1,0 +1,137 @@
+package multiagent.agents;
+
+import java.util.Date;
+import java.util.Vector;
+
+import jade.core.AID;
+import jade.core.Agent;
+import jade.core.behaviours.Behaviour;
+import jade.core.behaviours.CyclicBehaviour;
+import jade.core.behaviours.FSMBehaviour;
+import jade.core.behaviours.ParallelBehaviour;
+import jade.core.behaviours.TickerBehaviour;
+import jade.domain.FIPANames;
+import jade.domain.FIPAAgentManagement.FailureException;
+import jade.domain.FIPAAgentManagement.NotUnderstoodException;
+import jade.domain.FIPAAgentManagement.RefuseException;
+import jade.lang.acl.ACLMessage;
+import jade.lang.acl.MessageTemplate;
+import jade.proto.AchieveREInitiator;
+import jade.proto.AchieveREResponder;
+
+public class Manu extends Agent{
+	public static final String SEND_MSG="send-message";
+	protected void setup(){		
+//		AID r=new AID("Cloud@192.168.1.112:1099/JADE");
+		//	r.addAddresses("http://Han-PC:7778/acc");
+		//	msg.addReceiver(r);
+	
+		@SuppressWarnings("serial")
+		 Behaviour ticker=new CheckBehaviour(this,1000,SEND_MSG,"material_trade","I need 100 materials"){
+			
+			 public int onEnd() {
+					return 0;
+				} 
+		 };
+	
+		
+			Behaviour reBehaviour =new AchieveREInitiator(this, (ACLMessage) ticker.getDataStore().get(SEND_MSG)){
+			protected void handleInform(ACLMessage inform) {
+				System.out.println("Manu:"+"Agent "+inform.getSender().getName()+" successfully performed the requested action");
+			}
+			protected void handleRefuse(ACLMessage refuse) {
+				System.out.println("Manu:"+"Agent "+refuse.getSender().getName()+" refused to perform the requested action");
+				
+			}
+			protected void handleFailure(ACLMessage failure) {
+				if (failure.getSender().equals(myAgent.getAMS())) {
+					// FAILURE notification from the JADE runtime: the receiver
+					// does not exist
+					System.out.println("Manu:"+"Responder does not exist");
+				}
+				else {
+					System.out.println("Manu:"+"Agent "+failure.getSender().getName()+" failed to perform the requested action");
+				}
+			}
+			protected void handleAllResultNotifications(Vector notifications) {
+				//if (notifications.size() < nResponders) {
+					// Some responder didn't reply within the specified timeout
+				//	System.out.println("Timeout expired: missing "+(nResponders - notifications.size())+" responses");
+				//}
+			}
+		};
+		//添加有限状态机行为 		
+		 FSMBehaviour FSMTest =new FSMBehaviour(this);
+		 FSMTest.registerFirstState(ticker,"X");
+		 //FSMTest.registerLastState(new OperationYBehaviour(),"Y");
+		 FSMTest.registerState(reBehaviour,"Z");
+		// FSMTest.registerTransition("X", "Y", 1);
+		 FSMTest.registerTransition("X", "Z", 0);
+		 FSMTest.registerDefaultTransition("Z", "X", new String[]{"X", "Z"});
+		 //this.addBehaviour(FSMTest);
+		
+		
+		//定义消息模板
+		MessageTemplate mt=MessageTemplate.and(
+				MessageTemplate.and(MessageTemplate.MatchProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST), 
+						MessageTemplate.MatchPerformative(ACLMessage.REQUEST)),MessageTemplate.MatchConversationId("item_trade"));
+		//添加响应行为
+		Behaviour responderBehaviour=new AchieveREResponder(this, mt){		
+			protected ACLMessage prepareResponse(ACLMessage request) throws NotUnderstoodException, RefuseException {
+				
+				System.out.println("Manu:"+"Agent "+getLocalName()+": REQUEST received from "+request.getSender().getName()+". Action is "+request.getContent());
+				if (checkAction()) {
+					// We agree to perform the action. Note that in the FIPA-Request
+					// protocol the AGREE message is optional. Return null if you
+					// don't want to send it.
+					System.out.println("Manu:"+"Agent "+getLocalName()+": Agree");
+					ACLMessage agree = request.createReply();
+					agree.setPerformative(ACLMessage.AGREE);
+					agree.setConversationId("item_trade");
+					return agree;
+				}
+				else {
+					// We refuse to perform the action
+					System.out.println("Agent "+getLocalName()+": Refuse");
+					//throw new RefuseException("check-failed");
+					ACLMessage Refuse = request.createReply();
+					Refuse.setPerformative(ACLMessage.REFUSE);
+					Refuse.setConversationId("item_trade");
+					return Refuse;
+				}
+			}
+			
+			protected ACLMessage prepareResultNotification(ACLMessage request, ACLMessage response) throws FailureException {
+				if (performAction()) {
+					System.out.println("Manu:"+"Agent "+getLocalName()+": Action successfully performed");
+					ACLMessage inform = request.createReply();
+					inform.setPerformative(ACLMessage.INFORM);
+					inform.setConversationId("item_trade");
+					return inform;
+				}
+				else {
+					System.out.println("Manu:"+"Agent "+getLocalName()+": Action failed");
+					ACLMessage failed = request.createReply();
+					failed.setPerformative(ACLMessage.FAILURE);
+					failed.setConversationId("item_trade");
+					return failed;
+					//throw new FailureException("unexpected-error");
+				}	
+			}
+			
+		};		
+		//添加并行行为
+		ParallelBehaviour pb=new ParallelBehaviour(this, ParallelBehaviour.WHEN_ALL);
+		pb.addSubBehaviour(FSMTest);
+		pb.addSubBehaviour(responderBehaviour);
+	}
+	private boolean checkAction() {
+		  	//是否同意
+		 return (Math.random() > 0.2);
+	}
+		  
+	private boolean performAction() {
+		  	// 是够能够供应
+	 	return (Math.random() > 0.2);
+	}
+}

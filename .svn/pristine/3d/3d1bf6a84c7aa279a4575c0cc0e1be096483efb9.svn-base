@@ -1,0 +1,43 @@
+package springSC.web.entity;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+import org.hibernate.annotations.GenericGenerator;
+
+@Entity
+@Table(name="t_Item")
+public class ItemEntity {
+
+	@Id
+	@GeneratedValue(generator = "system-uuid")
+	@GenericGenerator(name = "system-uuid", strategy = "uuid")	
+	private String iid;
+	
+	@Column(length=100)
+	private String iname;
+	@Column()
+	private int  inum;
+	
+	public String getIid() {
+		return iid;
+	}
+	public void setIid(String id) {
+		this.iid = id;
+	}
+	public String getIname() {
+		return iname;
+	}
+	public void setIname(String iname) {
+		this.iname = iname;
+	}
+	public int getInum() {
+		return inum;
+	}
+	public void setInum(int inum) {
+		this.inum = inum;
+	}
+}

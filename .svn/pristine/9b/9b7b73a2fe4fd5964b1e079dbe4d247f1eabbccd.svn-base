@@ -1,0 +1,46 @@
+package springSC.web.dao;
+
+import java.util.List;
+
+import javax.transaction.Transactional;
+
+import org.hibernate.Query;
+import org.hibernate.SessionFactory;
+import org.omg.CORBA.PUBLIC_MEMBER;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
+
+import springSC.web.entity.OrderBillEntity;
+import springSC.web.entity.OrderItemEntity;
+
+@Repository
+@Transactional(rollbackOn = Exception.class)
+public class OrderBillDAO {
+
+	@Autowired
+	private SessionFactory sessionFactory;
+	public List<OrderBillEntity> getAllOrderBill(){
+		return null;
+		
+	}
+public void addOrderBill(OrderBillEntity orderbill){
+		
+		sessionFactory.getCurrentSession().save(orderbill);
+	}
+public Boolean delOrderBill(String id){
+	String hql = "delete OrderItemEntity orderitem where orderitem.id=?";  
+    Query query = sessionFactory.getCurrentSession().createQuery(hql);  
+    query.setString(0, id);  
+    return (query.executeUpdate() > 0);  
+	
+}	
+public OrderBillEntity getOrderBill(String id) {
+	String hql="from OrderBillEntity orderbill where orderbill.id=?";
+	Query query=sessionFactory.getCurrentSession().createQuery(hql);
+	query.setString(0, id);
+	return (OrderBillEntity)query.uniqueResult();
+}
+public void updateOrderBill(String id){
+	
+}
+}

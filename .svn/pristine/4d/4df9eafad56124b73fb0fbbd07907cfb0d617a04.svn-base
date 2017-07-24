@@ -1,0 +1,42 @@
+package multiagent;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+public class SQLConnector {
+	
+	public  String sqlconn() throws Exception{
+		
+		String urlString="jdbc:mysql://127.0.0.1:3306/test?"
+		+"user=root&password=root&userUnicode=true&characterEncoding=gbk";
+		try{   
+		Class.forName("com.mysql.jdbc.Driver");
+		System.out.println("成功加MySQL载驱动");
+		}catch(ClassNotFoundException e){   
+			System.out.println("找不到驱动程序类 ，加载驱动失败！");   
+			e.printStackTrace() ;   
+		}   
+		return urlString;
+	
+	}
+	public static void main(String[] args)throws Exception{
+		//实例化连接器
+		SQLConnector mysqlConnector = new SQLConnector(); 	
+		
+		//建立连接
+		Connection conn=null;
+		conn=DriverManager.getConnection(mysqlConnector.sqlconn());
+		Statement statement=conn.createStatement();
+		String sql="select * from t_material";
+		ResultSet rs=statement.executeQuery(sql);
+	
+		System.out.println("编号\t\t\t\t\t\t名称\t\t数量");
+		while (rs.next()) {
+			System.out.println(rs.getString(1)+"\t"+"\t"+rs.getString(2)+"\t"+"\t"+rs.getString(3));	
+		}
+		//切记关闭连接
+		conn.close();
+}
+}

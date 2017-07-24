@@ -1,0 +1,57 @@
+.header {
+	/*background-color: #966fac;
+	background-image: url("../img/hbg.jpg");
+	background-repeat: no-repeat;
+	background-position: right bottom;*/
+	background-image: -moz-linear-gradient(left, #e082ff, #422b57);
+	background-image: -ms-linear-gradient(left, #e082ff, #422b57);
+	background-image: -o-linear-gradient(left, #e082ff, #422b57);
+	background-image: -webkit-gradient(linear, left top, right top, from(#e082ff),
+		to(#422b57));
+	background-image: -webkit-linear-gradient(left, #e082ff, #422b57);
+	background-image: linear-gradient(left, #e082ff, #422b57);
+	height: 70px;
+}
+
+.header-title {
+	color: #FFF;
+	text-align: center;
+	/*text-shadow: #000 3px 0 0, #000 0 3px 0, #000 -1px 0 0, #000 0 -1px 0;*/
+	text-shadow: 2px 2px 2px #000, 2px -2px 2px #000, -2px 2px 2px #000,
+		-2px -2px 2px #000;
+		
+	height: 100%;
+	vertical-align:text-top;
+}
+
+.header-logo {
+	color: #FFF;
+	text-align: center;
+	height: 100%;
+}
+
+@font-face {
+	font-family: 'Noto Sans';
+	src: url('../fonts/NotoSansHans-Regular.otf');
+	font-weight: normal;
+	font-style: normal;
+}
+
+body {
+	font-family: 'Noto Sans';
+}
+.header {
+	background-color: #000509;
+	background-image: url("../img/hbg.jpg");
+	background-repeat: no-repeat;
+	background-position: right bottom;
+	
+	height: 100px;
+	
+	margin-bottom: 15px
+}
+.header-title {
+	color:white;
+	text-align: center;
+	text-shadow:#000 1px 0 0,#000 0 1px 0,#000 -1px 0 0,#000 0 -1px 0; 
+}

@@ -1,0 +1,66 @@
+package springSC.web.dao;
+
+import java.util.List;
+
+import javax.transaction.Transactional;
+
+import org.hibernate.Query;
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
+
+import springSC.web.entity.UserEntity;
+
+@Repository
+@Transactional(rollbackOn = Exception.class)
+public class UserDAO {
+	@Autowired
+	private SessionFactory sessionFactory;
+	
+	//≤È’“”√ªß
+	public UserEntity getUserByUsername(String username){
+		String HQL="FROM UserEntity user WHERE user.name=?";
+		Query q=sessionFactory.getCurrentSession().createQuery(HQL);
+		q.setString(0, username);
+		return (UserEntity)q.uniqueResult();
+	}
+	public List<UserEntity> getAllUser() {
+		String hql = "from UserEntity";
+		Query query = sessionFactory.getCurrentSession().createQuery(hql);
+		
+		return query.list();
+	}
+	//◊¢≤·
+	public void addUser(UserEntity userEntity){
+			sessionFactory.getCurrentSession().save(userEntity);
+	}
+	//…æ≥˝
+	public boolean delUser(String id){
+		 String hql = "delete UserEntity user where user.id=?";  
+	     Query query = sessionFactory.getCurrentSession().createQuery(hql);  
+	     query.setString(0, id);  
+	     return (query.executeUpdate() > 0);  
+	}
+	public boolean updataUser(UserEntity userEntity){
+		String hql = "update UserEntity user set user.name=?,user.password=?,user.classify=? where user.id=?";  
+        Query query = sessionFactory.getCurrentSession().createQuery(hql);  
+       
+        query.setString(0,userEntity.getName()); 
+        query.setString(1, userEntity.getPassword());  
+        query.setString(2, userEntity.getClassify());
+        query.setString(3, userEntity.getId());
+        
+        //query.setString(3, userEntity.getClassify());
+        int i=query.executeUpdate();
+        System.out.println(i+"    ssssssssss");
+        return (i > 0);  
+	}
+	public UserEntity getUser(String id) {
+		String hql="from UserEntity user where user.id=?";
+		Query query=sessionFactory.getCurrentSession().createQuery(hql);
+		query.setString(0, id);
+		return (UserEntity)query.uniqueResult();
+	}
+	
+	
+}

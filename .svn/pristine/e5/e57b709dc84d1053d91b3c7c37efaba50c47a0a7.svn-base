@@ -1,0 +1,28 @@
+package multiagent;
+
+import jade.core.Agent;
+import jade.core.behaviours.TickerBehaviour;
+
+public class MysqlTicker extends TickerBehaviour {
+
+	public MysqlTicker(Agent a, long period) {
+		super(a, period);
+		// TODO Auto-generated constructor stub
+	}
+	//定期检查seller库存
+	public Object qryitem() {
+		return null;
+		
+	}
+	//定期检查Manu库存
+	public Object qrymanu() {
+		return null;
+		
+	}
+	@Override
+	protected void onTick() {
+		// TODO Auto-generated method stub
+
+	}
+
+}

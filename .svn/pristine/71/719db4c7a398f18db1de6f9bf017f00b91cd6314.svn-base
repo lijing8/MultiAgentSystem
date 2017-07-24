@@ -1,0 +1,73 @@
+package multiagent;
+
+import jade.core.AID;
+import jade.core.Agent;
+import jade.core.behaviours.CyclicBehaviour;
+import jade.core.behaviours.FSMBehaviour;
+import jade.core.behaviours.OneShotBehaviour;
+import jade.core.behaviours.SimpleBehaviour;
+import jade.lang.acl.ACLMessage;
+
+public class MyFSMBehaviour extends FSMBehaviour{
+	public MyFSMBehaviour(Agent a){
+		super(a);
+		this.registerFirstState(new SimpleBehaviour(){//内建类私有变量,状态迁移代码
+		
+		private int endnum=0;
+		//内建类私有变量,是否退出循环
+		private boolean isdone=false;
+
+		
+		public void action() {
+			//检查库存
+			if (currentExecuted) {
+				isdone=true;
+				endnum=1;
+			}else {
+				isdone=false;
+				endnum=0;
+			}
+		}
+		public int onEnd() {
+			return endnum;
+		}
+		@Override
+		public boolean done() {
+			
+			return isdone;
+		}
+	}, "qrybehaviour");
+	//发送消息	
+	this.registerState(new OneShotBehaviour() {
+		
+		@Override
+		public void action() {
+			ACLMessage msg =new ACLMessage(ACLMessage.REQUEST);
+			msg.addReceiver(new AID("Cloud",AID.ISLOCALNAME));
+			msg.setLanguage("English");
+			msg.setContent("I need 100 cars");
+			a.send(msg);
+		}
+	}, "sendbehaviour");	
+	//接收消息
+	this.registerLastState(new CyclicBehaviour(a) {
+
+			@Override
+			public void action() {
+				// TODO Auto-generated method stub
+				ACLMessage msg1 =a.receive();
+				if (msg1!=null&&(msg1.getSender().toString().indexOf("Cloud")!=-1)) {
+					System.out.println("仿真云告诉我："+msg1.getContent());
+				}
+			}
+			
+		} , "reciver");
+	
+	//注册状态迁移值:从reciver到AMSMessage,值为1
+	registerTransition("qrybehaviour", "sendbehaviour", 1);
+	//注册状态迁移值:从reciver到Request,值为2
+	registerTransition("sendbehaviour", "reciver", 2);
+	//注册状态迁移值:从AMSMessage到reciver,值为3
+	registerTransition("reciver", "qrybehaviour", 3);	
+}
+}

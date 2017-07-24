@@ -1,0 +1,116 @@
+package multiagent.agents;
+
+import java.util.Date;
+import java.util.Random;
+import java.util.Vector;
+
+import jade.core.AID;
+import jade.core.Agent;
+import jade.core.behaviours.Behaviour;
+import jade.core.behaviours.CyclicBehaviour;
+import jade.core.behaviours.FSMBehaviour;
+import jade.core.behaviours.OneShotBehaviour;
+import jade.core.behaviours.SequentialBehaviour;
+import jade.core.behaviours.SimpleBehaviour;
+import jade.core.behaviours.TickerBehaviour;
+import jade.domain.FIPANames;
+import jade.lang.acl.ACLMessage;
+import jade.proto.AchieveREInitiator;
+import jade.proto.AchieveREResponder;
+
+
+public class Seller extends Agent  {
+	
+
+	protected void setup(){		
+//		AID r=new AID("Cloud@192.168.1.112:1099/JADE");
+		//	r.addAddresses("http://Han-PC:7778/acc");
+		//	msg.addReceiver(r);
+	
+	
+//		 Behaviour ticker=new CheckBehaviour2(){
+//			
+//			 public int onEnd() {
+//					return 1;
+//				} 
+//		 };
+			ACLMessage msg =new ACLMessage(ACLMessage.REQUEST);
+			msg.addReceiver(new AID("Cloud",AID.ISLOCALNAME));
+		//	msg.setLanguage("English");
+			msg.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
+			msg.setConversationId("item_trade");
+			//在20秒内收到回复：(ACLMessage) ticker.getDataStore().get(CheckBehaviour2.SEND_MSG)
+			msg.setReplyByDate(new Date(System.currentTimeMillis() + 2000));
+			msg.setContent("I need 100 cars");
+		
+			Behaviour reBehaviour =new AchieveREInitiator(this, msg){
+				
+			protected void handleInform(ACLMessage inform) {
+				System.out.println("Seller:"+"Agent "+inform.getSender().getName()+" successfully performed the requested action");
+			}
+			protected void handleRefuse(ACLMessage refuse) {
+				System.out.println("Seller:"+"Agent "+refuse.getSender().getName()+" refused to perform the requested action");
+				
+			}
+			protected void handleFailure(ACLMessage failure) {
+				if (failure.getSender().equals(myAgent.getAMS())) {
+					// FAILURE notification from the JADE runtime: the receiver
+					// does not exist
+					System.out.println("Seller:"+"Responder does not exist");
+				}
+				else {
+					System.out.println("Seller:"+"Agent "+failure.getSender().getName()+" failed to perform the requested action");
+				}
+			}
+			protected void handleAllResultNotifications(Vector notifications) {
+				//if (notifications.size() < nResponders) {
+					// Some responder didn't reply within the specified timeout
+				//	System.out.println("Timeout expired: missing "+(nResponders - notifications.size())+" responses");
+				//}
+			}
+		};
+		
+		//添加有限状态机行为 		
+//		 FSMBehaviour FSMTest =new FSMBehaviour(this);
+//		 FSMTest.registerFirstState(ticker,"X");
+//		 //FSMTest.registerLastState(new OperationYBehaviour(),"Y");
+//		 FSMTest.registerState(reBehaviour,"Z");
+//		// FSMTest.registerTransition("X", "Y", 1);
+//		 FSMTest.registerTransition("X", "Z", 1);
+//		 FSMTest.registerDefaultTransition("Z", "X", new String[]{"X", "Z"});
+//		 this.addBehaviour(FSMTest);
+	}
+}
+class CheckBehaviour2 extends SimpleBehaviour {
+
+	 public static final String SEND_MSG="send-message";
+	 private boolean finished=false;	
+	@Override
+	public void action() {
+
+		finished=false;
+		int x=(int)(Math.random()*100);
+		if (x<50) {	
+			finished=true;
+			System.out.println("ok?");
+			ACLMessage msg =new ACLMessage(ACLMessage.REQUEST);
+			msg.addReceiver(new AID("Cloud",AID.ISLOCALNAME));
+		//	msg.setLanguage("English");
+			msg.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
+			msg.setConversationId("item_trade");
+			//在20秒内收到回复
+			msg.setReplyByDate(new Date(System.currentTimeMillis() + 2000));
+			msg.setContent("I need 100 cars");
+			//send(msg);
+			getDataStore().put(SEND_MSG, msg);			
+		}
+
+	}
+
+	@Override
+	public boolean done() {
+		// TODO Auto-generated method stub
+		return finished;
+	}
+
+}

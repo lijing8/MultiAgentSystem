@@ -1,0 +1,136 @@
+package multiagent.agents;
+
+import java.util.Date;
+
+import jade.core.AID;
+import jade.core.Agent;
+import jade.core.behaviours.Behaviour;
+import jade.core.behaviours.SimpleBehaviour;
+import jade.domain.FIPANames;
+import jade.lang.acl.ACLMessage;
+
+public class CheckBehaviour extends SimpleBehaviour {
+	private long wakeupTime, period;
+	private boolean finished;
+	private int tickCount = 0;
+
+	private boolean fixedPeriod = false;
+	private long startTime;
+	public String str,strID,content;
+	public CheckBehaviour(Agent a, long period,String str, String strID,String content) {
+		super(a);
+		if (period <= 0) {
+			throw new IllegalArgumentException("Period must be greater than 0");
+		}
+		this.period = period;
+		this.str=str;
+		this.strID=strID;
+		this.content=content;
+	}
+
+	public void onStart() {
+		startTime = System.currentTimeMillis();
+		wakeupTime =  startTime + period;
+	}
+	
+	@Override
+	public void action() {
+		if (!finished) {
+			long blockTime = wakeupTime - System.currentTimeMillis();
+			if (blockTime <= 0) {
+				// Timeout is expired --> execute the user defined action and
+				// re-initialize wakeupTime
+				tickCount++;
+				int x=(int)(Math.random()*100);
+				if (x<50) {	
+					finished=true;
+					System.out.println(strID);
+					ACLMessage msg =new ACLMessage(ACLMessage.REQUEST);
+					msg.addReceiver(new AID("Cloud",AID.ISLOCALNAME));
+				//	msg.setLanguage("English");
+					msg.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
+					msg.setConversationId(strID);
+					//在20秒内收到回复
+					msg.setReplyByDate(new Date(System.currentTimeMillis() + 2000));
+					msg.setContent(content);
+					//send(msg);
+					getDataStore().put(str, msg);
+					
+				}
+				
+				long currentTime = System.currentTimeMillis();
+				if (fixedPeriod) {
+					wakeupTime = startTime + (tickCount + 1) * period;
+				}
+				else {
+					wakeupTime = currentTime + period;
+				}
+				blockTime = wakeupTime - currentTime;
+			}
+			// Maybe this behaviour has been removed within the onTick() method
+			if (myAgent != null && !finished && blockTime > 0) {
+				block(blockTime);
+			}
+		}
+
+	}
+
+	@Override
+	public boolean done() {
+		
+		return finished;
+	}
+
+	
+	public void setFixedPeriod(boolean fixedPeriod) {
+		this.fixedPeriod = fixedPeriod;
+	}
+	
+	public void reset(long period) {
+		this.reset();
+		if (period <= 0) {
+			throw new IllegalArgumentException("Period must be greater than 0");
+		}
+		this.period = period;
+	}
+	
+	public void reset() {
+		super.reset();
+		finished = false;
+		tickCount = 0;
+	}
+	public void stop() {
+		finished = true;
+		restart();
+	}
+	
+	public final int getTickCount() {
+		return tickCount;
+	}
+	
+	protected long getPeriod() {
+		return period;
+	}
+	//#MIDP_EXCLUDE_BEGIN
+	
+	// For persistence service
+	private void setTickCount(int tc) {
+		tickCount = tc;
+	}
+	
+	// For persistence service
+	private void setPeriod(long p) {
+		period = p;
+	}
+	
+	// For persistence service
+	private void setWakeupTime(long wt) {
+		wakeupTime = wt;
+	}
+	
+	// For persistence service
+	private long getWakeupTime() {
+		return wakeupTime;
+	}
+
+}

@@ -1,0 +1,52 @@
+package multiagent;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+
+public class sqltest {
+	public static void main(String[] args)throws Exception{
+		Connection conn=null;
+		String sql;
+		String urlString="jdbc:mysql://127.0.0.1:3306/test?"
+		+"user=root&password=root&userUnicode=true&characterEncoding=UTF8";
+		/*
+		 *  String url = "jdbc:mysql://localhost:3306/test" ;    
+     		String username = "root" ;   
+     		String password = "root" ;   
+		 */
+		
+		
+		//加载MySQL驱动
+		try {
+			
+		
+		Class.forName("com.mysql.jdbc.Driver");
+		System.out.println("成功加MySQL载驱动");
+		conn=DriverManager.getConnection(urlString);
+		//Connection con =DriverManager.getConnection(url , username , password ) ;   
+		Statement statement=conn.createStatement();
+		
+		
+		//定义SQL语句
+		sql ="select * from t_material";
+		ResultSet rs=statement.executeQuery(sql);
+		System.out.println("编号\t\t\t\t\t\t名称\t\t数量");
+		while (rs.next()) {
+			System.out.println(rs.getString(1)+"\t"+"\t"+rs.getString(2)+"\t"+"\t"+rs.getString(3));
+				
+		}
+		} catch (SQLException e) {
+			System.out.println("MySQL操作错误");
+			e.printStackTrace();
+		}catch (Exception e) {
+			e.printStackTrace();
+		}finally{
+			conn.close();
+		}
+		
+		
+	}
+}

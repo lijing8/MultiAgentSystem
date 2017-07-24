@@ -1,0 +1,84 @@
+
+package multiagent.agents;
+
+import jade.core.Agent;
+import jade.core.AID;
+import jade.core.behaviours.Behaviour;
+import jade.core.behaviours.FSMBehaviour;
+import jade.core.behaviours.OneShotBehaviour;
+import jade.core.behaviours.SimpleBehaviour;
+import jade.lang.acl.ACLMessage;
+import jade.domain.FIPANames;
+
+import java.util.Date;
+
+
+
+public class SellerRE extends Agent {
+
+  protected void setup() {
+	 Behaviour ticker=new CheckBehaviour4(){
+		 public int onEnd() {
+				return 1;
+			} 
+	 };
+	 @SuppressWarnings("serial")
+	Behaviour ticker2=new OneShotBehaviour() {
+		
+		@Override
+		public void action() {
+		System.out.println("第二个，转到第一个");
+			
+		}
+
+	};
+
+
+	 FSMBehaviour FSMTest =new FSMBehaviour(this);
+	 FSMTest.registerFirstState(ticker,"X");
+	 //FSMTest.registerLastState(new OperationYBehaviour(),"Y");
+	 FSMTest.registerState(ticker2,"Z");
+	// FSMTest.registerTransition("X", "Y", 1);
+	 FSMTest.registerTransition("X", "Z", 1);
+	 FSMTest.registerDefaultTransition("Z", "X", new String[]{"X", "Z"});
+
+	 this.addBehaviour(FSMTest);
+	 
+	
+	
+  }
+}
+
+class CheckBehaviour4 extends SimpleBehaviour {
+
+	 public static final String SEND_MSG="send-message";
+	 private boolean finished=false;	
+	@Override
+	public void action() {
+
+		
+		int x=(int)(Math.random()*100);
+		if (x<50) {	
+			finished=true;
+			System.out.println("keyibu???");
+//			ACLMessage msg =new ACLMessage(ACLMessage.REQUEST);
+//			msg.addReceiver(new AID("Cloud",AID.ISLOCALNAME));
+//		//	msg.setLanguage("English");
+//			msg.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
+//			msg.setConversationId("item_trade");
+//			//在20秒内收到回复
+//			msg.setReplyByDate(new Date(System.currentTimeMillis() + 2000));
+//			msg.setContent("I need 100 cars");
+//			//send(msg);
+//			getDataStore().put(SEND_MSG, msg);			
+		}
+
+	}
+
+	@Override
+	public boolean done() {
+		// TODO Auto-generated method stub
+		return finished;
+	}
+
+}

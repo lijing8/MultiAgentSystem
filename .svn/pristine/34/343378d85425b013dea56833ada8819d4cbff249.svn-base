@@ -1,0 +1,16 @@
+package springSC.web.agent;
+
+import java.io.Serializable;
+
+public class Order implements Serializable {
+	 String id;
+	 String name;
+	 int  num;
+	 Order(String id,String name, int num)
+	 {
+	  this.id = id;
+	  this.name = name;
+	  this.num=num;
+	 }
+	
+}

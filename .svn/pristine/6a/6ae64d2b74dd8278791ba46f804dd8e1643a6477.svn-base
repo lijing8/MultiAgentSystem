@@ -1,0 +1,56 @@
+package multiagent;
+
+import java.util.Vector;
+
+import jade.core.Agent;
+import jade.lang.acl.ACLMessage;
+import jade.proto.AchieveREInitiator;
+
+public class AchieveREUtil{
+
+	public AchieveREUtil(ACLMessage msg,Agent a, ACLMessage msg1) {
+		
+	new AchieveREInitiator(a, msg1){
+		protected void handleInform(ACLMessage inform) {
+			System.out.println("Agent "+inform.getSender().getName()+" successfully performed the requested action");
+			//向seller回复结果
+			ACLMessage information=msg.createReply();
+			information.setPerformative(ACLMessage.INFORM);
+			a.send(information);
+		}
+		protected void handleRefuse(ACLMessage refuse) {
+			System.out.println("Agent "+refuse.getSender().getName()+" refused to perform the requested action");
+			//nResponders--;
+			ACLMessage refuseinf=msg.createReply();
+			refuseinf.setPerformative(ACLMessage.REFUSE);
+			a.send(refuseinf);
+		}
+		protected void handleFailure(ACLMessage failure) {
+			if (failure.getSender().equals(myAgent.getAMS())) {
+				// FAILURE notification from the JADE runtime: the receiver
+				// does not exist
+				System.out.println("Responder does not exist");
+				ACLMessage failureinf=msg.createReply();
+				failureinf.setPerformative(ACLMessage.FAILURE);
+				failureinf.setContent("Responder does not exist");
+				a.send(failureinf);
+			
+			}
+			else {
+				System.out.println("Agent "+failure.getSender().getName()+" failed to perform the requested action");
+				ACLMessage failureinf=msg.createReply();
+				failureinf.setPerformative(ACLMessage.FAILURE);
+				failureinf.setContent("执行任务失败");
+				a.send(failureinf);
+			
+			}
+		}
+		protected void handleAllResultNotifications(Vector notifications) {
+			//if (notifications.size() < nResponders) {
+				// Some responder didn't reply within the specified timeout
+			//	System.out.println("Timeout expired: missing "+(nResponders - notifications.size())+" responses");
+			//}
+		}
+	};
+	}
+}

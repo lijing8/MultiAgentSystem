@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"  
+ xmlns:context="http://www.springframework.org/schema/context"  
+ xmlns:p="http://www.springframework.org/schema/p"  
+ xmlns:mvc="http://www.springframework.org/schema/mvc"  
+ xmlns:tx="http://www.springframework.org/schema/tx"  
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xmlns:aop="http://www.springframework.org/schema/aop"  
+ xsi:schemaLocation="http://www.springframework.org/schema/beans  
+      http://www.springframework.org/schema/beans/spring-beans-4.1.xsd
+      http://www.springframework.org/schema/aop     
+      http://www.springframework.org/schema/aop/spring-aop-4.1.xsd   
+      http://www.springframework.org/schema/context  
+      http://www.springframework.org/schema/context/spring-context-4.1.xsd  
+      http://www.springframework.org/schema/mvc  
+      http://www.springframework.org/schema/mvc/spring-mvc-4.1.xsd
+      http://www.springframework.org/schema/tx
+      http://www.springframework.org/schema/tx/spring-tx-4.1.xsd">
+ 	
+   
+    
+
+	<!-- 配置spring的扫描注解功能 -->
+	<context:component-scan base-package="springSC.web">
+		<context:include-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+		<context:include-filter type="annotation" expression="org.springframework.stereotype.Service"/>
+		<context:include-filter type="annotation" expression="org.springframework.stereotype.Repository"/>
+	</context:component-scan>
+	<mvc:annotation-driven/>
+	
+	<!-- 访问静态文件 -->
+	<mvc:resources location="/js/" mapping="/js/**"/>
+	<mvc:resources location="/ckeditor/" mapping="/ckeditor/**"/>
+	<mvc:resources location="/css/" mapping="/css/**"/>
+	<mvc:resources location="/fonts/" mapping="/fonts/**"/>
+	<mvc:resources location="/img/" mapping="/img/**"/>
+	<mvc:resources location="/" mapping="/favicon.ico"/>
+	
+	<!-- 配置页面解析器 -->
+	<bean id="viewResolver" class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<property name="prefix" value="/"></property>
+		<property name="suffix" value=".jsp"></property>
+	</bean>
+	
+	<!-- 配置数据库信息，需要按具体情况变更 -->
+	<!-- bean类信息不用变 -->
+	<bean id="datasource" class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+		<!-- 连接数据库驱动类，具体数据库有所不同 -->
+		<property name="driverClassName" value="com.mysql.jdbc.Driver"/>
+		<!-- 数据库地址，按照实际情况更改 -->
+		<property name="url" value="jdbc:mysql://127.0.0.1:3306/test"/>
+		<!-- 数据库用户名密码，按照实际情况更改 -->
+		<property name="username" value="mysql"/>
+		<property name="password" value="mysql"/>
+	</bean>
+	
+	<!-- hibernate相关对象配置 -->
+	<!-- sessionFactory对象配置 -->
+	<bean id="sessionFactory" class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
+		<!-- 引入上面的数据库信息 -->
+		<property name="dataSource">
+			<ref bean="datasource"/>
+		</property>
+		<!-- hibernate属性配置 -->
+		<property name="hibernateProperties">
+			<props>
+				<!-- 数据库方言，按照使用数据库类型给改，翻译HQL语句使用 -->
+				<prop key="hibernate.dialect">org.hibernate.dialect.MySQL5Dialect</prop>  
+                <!-- 在执行命令时从控制台输出SQL语句 -->
+                <prop key="hibernate.show_sql">true</prop>
+                <!-- 输出时SQL语句需要格式化 -->
+                <prop key="hibernate.format_sql">true</prop>
+                <!-- 自动变更表信息，不用手动建表。update保留数据但是部分功能受限，create清空数据但是可以使用全部功能 -->
+                <prop key="hibernate.hbm2ddl.auto">update</prop>
+			</props>
+		</property>
+		
+		<!-- 扫描hibernate映射类 -->
+		<property name="packagesToScan">
+			<!-- 扫描位置 -->
+			<value>springSC.web.entity</value>
+		</property>
+	</bean>
+	
+	<bean id="transactionManager" class="org.springframework.orm.hibernate4.HibernateTransactionManager">
+		<property name="sessionFactory" ref="sessionFactory" />
+	</bean>
+		<bean id="transactionBese" class="org.springframework.transaction.interceptor.TransactionProxyFactoryBean" lazy-init="true" abstract="true">
+		<property name="transactionManager" ref="transactionManager"></property>
+		<property name="transactionAttributes">
+			<props>
+				<prop key="add*">PROPAGATION_REQUIRED,-Exception</prop>
+				<prop key="update*">PROPAGATION_REQUIRED,-Exception</prop>
+				<prop key="insert*">PROPAGATION_REQUIRED,-Exception</prop>
+				<prop key="modify*">PROPAGATION_REQUIRED,-Exception</prop>
+				<prop key="delete*">PROPAGATION_REQUIRED,-Exception</prop>
+				<prop key="get*">PROPAGATION_NEVER</prop>
+			</props>
+		</property>
+	</bean>
+	<!-- 开启事务注解功能，所有被标记为@Transactional注解的类中的函数都会被事务包裹并可以回滚 -->
+	<tx:annotation-driven transaction-manager="transactionManager" proxy-target-class="true" />
+	
+	<!-- 文件上传解析器 -->
+	<bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+		  <property name="defaultEncoding" value="utf-8" />
+	      <property name="maxUploadSize" value="10485760000" />
+	      <property name="maxInMemorySize" value="40960" />
+	</bean>
+	
+ </beans>  

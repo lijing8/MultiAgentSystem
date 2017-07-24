@@ -1,0 +1,154 @@
+package springSC.web.controller;
+
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.servlet.ModelAndView;
+
+import springSC.web.entity.ItemEntity;
+import springSC.web.entity.MaterialEntity;
+import springSC.web.service.ItemService;
+import springSC.web.service.MaterialService;
+
+@Controller
+@RequestMapping(value="/inventory")
+public class InventoryController {
+	@Autowired
+	private MaterialService materialService;
+	@Autowired
+	private ItemService itemService;
+	
+	
+	@RequestMapping(value="getallmaterial")
+	public ModelAndView getAllMaterial() {		
+		List<MaterialEntity> materiallist = materialService.getAllMaterial();
+		ModelAndView ma = new ModelAndView();
+		ma.setViewName("/material");
+		ma.addObject("result", materiallist);
+		return ma;
+	}
+	
+	@RequestMapping(value="/getallitem")
+	public ModelAndView getAllItem() {		
+		List<ItemEntity> itemlist = itemService.getAllItem();
+		ModelAndView ma = new ModelAndView();
+		ma.setViewName("/item");
+		ma.addObject("result", itemlist);
+		return ma;
+	}
+	
+	//
+	@RequestMapping(value="/toaddmaterial")
+	public ModelAndView toaddmaterial(){
+		ModelAndView ma = new ModelAndView();
+		ma.setViewName("/addmaterial");
+		return ma;
+	}
+	
+	//
+	@RequestMapping(value="/toadditem")
+	public ModelAndView toadditem(){
+		ModelAndView ma = new ModelAndView();
+		ma.setViewName("/additem");
+		return ma;
+	}
+	
+	//添加物料
+	@RequestMapping(value="/addmaterial")
+	public ModelAndView addmaterial(String Mname,String Mnum)throws Exception{
+		if(Mname==null || Mname.trim().length()==0){
+			ModelAndView ma = new ModelAndView();
+			ma.setViewName("/addmaterial");
+			ma.addObject("error", "物料信息不能为空");
+			ma.addObject("Mname",Mname);
+			ma.addObject("Mnum",Mnum);
+			return ma;
+		}
+		int mnum=Integer.parseInt(Mnum);
+		materialService.addMaterial(Mname, mnum);
+//		ModelAndView mav = new ModelAndView();
+//		mav.setViewName("/Manualagent");
+		return getAllMaterial();
+	}
+	//添加成品
+	@RequestMapping(value="/additem")
+	public ModelAndView additem(String Iname,String Inum)throws Exception{
+		if(Iname==null || Iname.trim().length()==0){
+			ModelAndView ma = new ModelAndView();
+			ma.setViewName("/additem");
+			ma.addObject("error", "产品信息不能为空");
+			ma.addObject("iname",Iname);
+			ma.addObject("inum",Inum);
+			return ma;
+		}
+		int inum=Integer.parseInt(Inum);
+		itemService.addItem(Iname, inum);
+		//ModelAndView mav = new ModelAndView();
+		//mav.setViewName("/Manualagent");
+		return getAllItem();
+	}
+	//修改物料信息
+	@RequestMapping("/getEditMaterial")
+	public String getEditMaterial(String id,HttpServletRequest request){
+		MaterialEntity material = materialService.getMaterial(id);
+		request.setAttribute("material", material);
+		return "/editMaterial";
+	}
+	//修改产品信息
+	@RequestMapping("/getEditItem")
+	public String getEditItem(String id,HttpServletRequest request){
+		ItemEntity item = itemService.getItem(id);
+		request.setAttribute("item", item);
+		return "/editItem";
+	}
+	
+	//删除
+	@RequestMapping(value="/delMaterial")
+	public ModelAndView delMaterial(String id){
+		materialService.delMaterial(id);
+		return getAllMaterial();
+	}
+	@RequestMapping(value="/delItem")
+	public ModelAndView delItem(String id){
+		itemService.delItem(id);
+		return getAllItem();
+	}
+	@RequestMapping(value="/updateMaterial")
+	public ModelAndView updateMaterial(HttpServletRequest request, MaterialEntity material){
+		if(materialService.updataMaterial(material)){  
+			material = materialService.getMaterial(material.getMid());  
+            request.setAttribute("material", material);  
+            return getAllMaterial();  
+        }else{ 
+        	ModelAndView mav = new ModelAndView();
+    		mav.setViewName("/error");
+    		return mav;
+            
+        }  
+	}
+	@RequestMapping(value="/updateItem")
+	public ModelAndView updateItem( ItemEntity item,HttpServletRequest request){
+		if(itemService.updataItem(item)){  
+			item = itemService.getItem(item.getIid());
+            request.setAttribute("item", item);  
+            return getAllItem();  
+        }else{ 
+        	ModelAndView mav = new ModelAndView();
+    		mav.setViewName("/error");
+    		return mav;
+            
+        }  
+	}
+
+	
+	
+	}
+	
+	
+	
+	
+

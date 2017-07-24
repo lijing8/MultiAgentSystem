@@ -1,0 +1,49 @@
+package springSC.web.entity;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+import org.hibernate.annotations.GenericGenerator;
+
+@Entity
+@Table(name="t_Material")
+public class MaterialEntity {
+
+	@Id
+	@GeneratedValue(generator = "system-uuid")
+	@GenericGenerator(name = "system-uuid", strategy = "uuid")	
+	private String mid;
+	
+
+	@Column(length=100)
+	private String mname;
+	
+	@Column(length=100)
+	private int  mnum;
+	public String getMid() {
+		return mid;
+	}
+
+	public void setMid(String mid) {
+		this.mid = mid;
+	}
+
+	public String getMname() {
+		return mname;
+	}
+
+	public void setMname(String mname) {
+		this.mname = mname;
+	}
+
+	public int getMnum() {
+		return mnum;
+	}
+
+	public void setMnum(int mnum) {
+		this.mnum = mnum;
+	}
+}

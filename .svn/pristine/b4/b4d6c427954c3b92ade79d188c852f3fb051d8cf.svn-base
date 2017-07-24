@@ -1,0 +1,50 @@
+package springSC.web.service;
+
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import springSC.web.dao.UserDAO;
+import springSC.web.entity.UserEntity;
+
+@Service
+public class UserService {
+	
+	@Autowired
+	private UserDAO userDAO;
+
+
+	
+	public UserEntity getUserByUsername(String name) throws UnsupportedEncodingException{
+	
+		return userDAO.getUserByUsername(name);
+	}
+	public  List<UserEntity> getAllUser() {
+		
+		return userDAO.getAllUser();
+	}
+
+	
+	public void addUser(String name,String password, String classify) throws UnsupportedEncodingException{
+		UserEntity userEntity=new UserEntity();
+		
+		userEntity.setName(name);
+		userEntity.setPassword(password);
+		userEntity.setClassify(classify);
+		userDAO.addUser(userEntity);
+	}
+	public boolean delUser(String id){
+		return userDAO.delUser(id);
+	}
+	public boolean updateUser(UserEntity user){
+		return userDAO.updataUser(user);
+	}
+	public UserEntity getUser(String id) {
+		return userDAO.getUser(id);
+	}
+	
+	
+}

@@ -1,0 +1,50 @@
+package springSC.web.dao;
+
+import java.util.List;
+
+import javax.transaction.Transactional;
+
+import org.hibernate.Query;
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Repository;
+
+import springSC.web.entity.OrderItemEntity;
+
+@Repository
+@Transactional(rollbackOn = Exception.class)
+public class OrderItemDAO {
+	@Autowired
+	private SessionFactory sessionFactory;
+	
+	public List<OrderItemEntity> getAllOrderItem() {
+		String hql = "from OrderItemEntity";
+		Query query = sessionFactory.getCurrentSession().createQuery(hql);	
+		return query.list();
+	}
+	public void addOrderItem(OrderItemEntity orderItem){
+		
+		sessionFactory.getCurrentSession().save(orderItem);
+	}
+	public boolean delOrderItem(String id){
+		 String hql = "delete OrderItemEntity orderitem where orderitem.id=?";  
+	     Query query = sessionFactory.getCurrentSession().createQuery(hql);  
+	     query.setString(0, id);  
+	     return (query.executeUpdate() > 0);  
+	}
+	public boolean updataOrderItem(OrderItemEntity orderItem){
+		String hql = "update OrderItemEntity orderItem set orderItem.name=?,orderItem.num=? where orderItem.id=?";  
+        Query query = sessionFactory.getCurrentSession().createQuery(hql);  
+        query.setString(0, orderItem.getName());  
+        query.setLong(1, orderItem.getNum());  
+        query.setString(2, orderItem.getId());
+        int i=query.executeUpdate();
+        return (i > 0);  
+	}
+	public OrderItemEntity getOrderItem(String id) {
+		String hql="from OrderItemEntity orderItem where orderItem.id=?";
+		Query query=sessionFactory.getCurrentSession().createQuery(hql);
+		query.setString(0, id);
+		return (OrderItemEntity)query.uniqueResult();
+	}
+}

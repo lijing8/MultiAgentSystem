@@ -1,0 +1,75 @@
+package springSC.web.agent;
+
+import java.io.IOException;
+
+import org.hibernate.SessionFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import springSC.web.dao.OrderItemDAO;
+import springSC.web.entity.ItemEntity;
+import springSC.web.entity.OrderItemEntity;
+import jade.core.AID;
+import jade.core.Agent;
+import jade.core.behaviours.Behaviour;
+import jade.core.behaviours.TickerBehaviour;
+import jade.lang.acl.ACLMessage;
+
+/*
+ * 
+ * 分销商，发送订单给制造商，制造商根据订单修改成品库存，
+ */
+@Component
+public class SellerAgent extends Agent {
+//	@Autowired
+//	private OrderItemDAO orderItemDAO=new OrderItemDAO();	
+
+//	ManuAgent manuAgent=new ManuAgent();
+	protected void setup(){
+		System.out.println("SellerAgent has been started!!!");
+			//获取传入对象数组
+			int  m=this.getArguments().length;
+			Object[] ob=this.getArguments();	
+			ItemEntity[] itemEntities=new ItemEntity[m];			
+			for (int i = 0; i < m; i++) {
+				itemEntities[i]=(ItemEntity) ob[i];
+				System.out.println("第"+i+"种产品是       "+itemEntities[i].getIname());
+			}
+			
+		Behaviour tickbehaviour=new TickerBehaviour(this,10000) {
+			
+			@Override
+			protected void onTick() {
+				
+				OrderItemEntity[] itemorderlist = new OrderItemEntity[m]; 
+				for (int i = 0; i < m; i++) {
+					itemorderlist[i]=new OrderItemEntity();
+					itemorderlist[i].setId(itemEntities[i].getIid());
+					itemorderlist[i].setName(itemEntities[i].getIname());
+					itemorderlist[i].setNum((int)Math.random()*10);
+				//	sessionFactory.getCurrentSession().save(itemorderlist[i]);
+					
+				}
+			
+			
+				ACLMessage msg =new ACLMessage(ACLMessage.CFP);
+				//添加制造商为接收者
+				msg.addReceiver(new AID("manu",AID.ISLOCALNAME));
+				try {
+					int i=itemorderlist.length;
+					msg.setContent(String.valueOf(i));
+					msg.setContentObject(itemorderlist);
+					
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				//msg.setContent("需要补货 ！");
+				send(msg);
+				//SenderBehaviour senderBehaviour = new SenderBehaviour(this, msg );
+				
+			}
+		};	
+		this.addBehaviour(tickbehaviour);
+			
+	}
+}

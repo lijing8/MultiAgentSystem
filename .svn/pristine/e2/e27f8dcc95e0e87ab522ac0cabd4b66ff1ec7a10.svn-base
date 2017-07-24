@@ -1,0 +1,76 @@
+package multiagent.agents;
+
+import java.util.Date;
+import java.util.Random;
+import java.util.Vector;
+
+import jade.core.AID;
+import jade.core.Agent;
+import jade.core.behaviours.Behaviour;
+import jade.core.behaviours.CyclicBehaviour;
+import jade.core.behaviours.FSMBehaviour;
+import jade.core.behaviours.OneShotBehaviour;
+import jade.core.behaviours.SequentialBehaviour;
+import jade.core.behaviours.SimpleBehaviour;
+import jade.core.behaviours.TickerBehaviour;
+import jade.domain.FIPANames;
+import jade.lang.acl.ACLMessage;
+import jade.proto.AchieveREInitiator;
+import jade.proto.AchieveREResponder;
+
+
+public class Seller extends Agent  {
+	
+	public static final String SEND_MSG="send-message";
+	protected void setup(){		
+//		AID r=new AID("Cloud@192.168.1.112:1099/JADE");
+		//	r.addAddresses("http://Han-PC:7778/acc");
+		//	msg.addReceiver(r);
+	
+		@SuppressWarnings("serial")
+		 Behaviour ticker=new CheckBehaviour(this,1000,SEND_MSG,"item_trade","I need 100 cars"){
+			
+			 public int onEnd() {
+					return 0;
+				} 
+		 };
+	
+		
+			Behaviour reBehaviour =new AchieveREInitiator(this, (ACLMessage) ticker.getDataStore().get(SEND_MSG)){
+			protected void handleInform(ACLMessage inform) {
+				System.out.println("Seller:"+"Agent "+inform.getSender().getName()+" successfully performed the requested action");
+			}
+			protected void handleRefuse(ACLMessage refuse) {
+				System.out.println("Seller:"+"Agent "+refuse.getSender().getName()+" refused to perform the requested action");
+				
+			}
+			protected void handleFailure(ACLMessage failure) {
+				if (failure.getSender().equals(myAgent.getAMS())) {
+					// FAILURE notification from the JADE runtime: the receiver
+					// does not exist
+					System.out.println("Seller:"+"Responder does not exist");
+				}
+				else {
+					System.out.println("Seller:"+"Agent "+failure.getSender().getName()+" failed to perform the requested action");
+				}
+			}
+			protected void handleAllResultNotifications(Vector notifications) {
+				//if (notifications.size() < nResponders) {
+					// Some responder didn't reply within the specified timeout
+				//	System.out.println("Timeout expired: missing "+(nResponders - notifications.size())+" responses");
+				//}
+			}
+		};
+		
+		//添加有限状态机行为 		
+		 FSMBehaviour FSMTest =new FSMBehaviour(this);
+		 FSMTest.registerFirstState(ticker,"X");
+		 //FSMTest.registerLastState(new OperationYBehaviour(),"Y");
+		 FSMTest.registerState(reBehaviour,"Z");
+		// FSMTest.registerTransition("X", "Y", 1);
+		 FSMTest.registerTransition("X", "Z", 0);
+		 FSMTest.registerDefaultTransition("Z", "X", new String[]{"X", "Z"});
+
+		 this.addBehaviour(FSMTest);
+	}
+}

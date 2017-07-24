@@ -1,0 +1,87 @@
+package springSC.web.agent;
+
+import java.util.List;
+
+import jade.core.Agent;
+import jade.core.behaviours.Behaviour;
+import jade.core.behaviours.CyclicBehaviour;
+import jade.core.behaviours.ReceiverBehaviour;
+import jade.core.behaviours.SequentialBehaviour;
+import jade.core.behaviours.WakerBehaviour;
+import jade.core.behaviours.ReceiverBehaviour.Handle;
+import jade.core.behaviours.ReceiverBehaviour.NotYetReady;
+import jade.core.behaviours.ReceiverBehaviour.TimedOut;
+import jade.domain.FIPAException;
+import jade.domain.FIPAAgentManagement.ServiceDescription;
+import jade.lang.acl.ACLMessage;
+import jade.lang.acl.UnreadableException;
+
+import org.omg.CORBA.PUBLIC_MEMBER;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import springSC.web.entity.ItemEntity;
+import springSC.web.entity.MaterialEntity;
+import springSC.web.entity.OrderItemEntity;
+
+/*
+ * 接受来自制造商的消息，根据制造商的订单进行对制造商的物料进行补充，直接在相应的表中修改库存量
+ */
+
+public class SupplyAgent extends Agent  {
+	@Autowired
+	private MaterialEntity materialEntity;
+	
+	
+	protected void setup(){
+		System.out.println("SupplyAgent has been started!!!");
+		
+		Behaviour suplierreceiver =new CyclicBehaviour() {
+			public void action() {
+				ACLMessage msgmanu=receive();
+				if (msgmanu==null) {
+					block();
+				}else {
+					try {
+						String lengthstr=msgmanu.getContent();
+						Object recontent = msgmanu.getContentObject();
+						OrderItemEntity materialorderlist[]=new OrderItemEntity[Integer.parseInt(lengthstr)];
+						
+										
+						if (recontent instanceof  OrderItemEntity[]) {
+							materialorderlist=(OrderItemEntity[])recontent;
+						}else {
+							System.out.println("没收到！！");
+						}					
+					} catch (UnreadableException e) {
+						e.printStackTrace();
+					}
+				
+				}
+				
+			}
+			
+		};
+		
+		Behaviour updateBehaviour=new WakerBehaviour(this,2000) {
+			
+
+			//修改库存,直接修改会不会有问题？？？？
+			@SuppressWarnings("null")
+			protected void onWake(){
+//				for (int j = 0; j < materialorderlist.length; j++) {
+//					materialEntity.setMnum(materialEntity.getMnum()+ materialorderlist[j].num);
+//				}
+				System.out.println("修改库存");
+			}
+				
+		};
+		SequentialBehaviour sq=new SequentialBehaviour();
+		sq.addSubBehaviour(suplierreceiver);
+		sq.addSubBehaviour(updateBehaviour);
+		this.addBehaviour(sq);
+		
+	
+	
+	}
+}

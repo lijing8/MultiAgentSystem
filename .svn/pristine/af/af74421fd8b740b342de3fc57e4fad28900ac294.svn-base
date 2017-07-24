@@ -1,0 +1,208 @@
+package springSC.web.controller;
+import jade.core.Profile;
+import jade.core.ProfileImpl;
+import jade.core.Runtime;
+import jade.wrapper.AgentContainer;
+import jade.wrapper.AgentController;
+import jade.wrapper.ControllerException;
+import jade.wrapper.StaleProxyException;
+
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.ModelAndView;
+
+import springSC.web.agent.MyparallelAgent;
+import springSC.web.dao.MaterialDAO;
+import springSC.web.entity.ItemEntity;
+import springSC.web.entity.MaterialEntity;
+import springSC.web.entity.UserEntity;
+import springSC.web.service.ItemService;
+import springSC.web.service.MaterialService;
+import springSC.web.service.StartAgent;
+import springSC.web.service.UserService;
+
+@Controller
+@RequestMapping(value="/logtest")
+public class UserController {
+	@Autowired
+	private UserService userService;
+	@Autowired
+	private MaterialService materialService;
+	@Autowired
+	private ItemService itemService;
+	
+	@Autowired
+	private MyparallelAgent myparallelAgent;
+	@Autowired
+	private StartAgent startagent;
+
+	
+	//主页面
+	@RequestMapping(value="/index.html")
+	public String pleaselog()throws ControllerException{
+		int i=3;
+		ArrayList<String> agentname = new ArrayList<String> ();
+		ArrayList<String> agentclass = new ArrayList<String> ();
+		
+		agentname.add(0, "manu");agentclass.add(0, "springSC.web.agent.ManuAgent");
+		agentname.add(1, "seller");agentclass.add(1, "springSC.web.agent.SellerAgent");
+		agentname.add(2, "supplier");agentclass.add(2, "springSC.web.agent.SupplyAgent");
+		
+		
+	
+		List<MaterialEntity> materialEntities=materialService.getAllMaterial();
+		List<ItemEntity> itemEntities=itemService.getAllItem();
+		
+		Object[][] objects=new Object[3][];
+		objects[0]=materialEntities.toArray();		
+		objects[1]=itemEntities.toArray();	
+		objects[2]=null;
+	
+			startagent.startAgent(i, agentname, agentclass, objects );
+		
+		
+		return "/userlogin";
+	}
+
+	
+
+	@RequestMapping(value="getuser")
+	public ModelAndView getUser(HttpServletRequest request,@RequestParam("name")String name1,
+			@RequestParam("password") String password1 ) throws Exception{
+		System.out.println(name1+":"+password1);
+		
+		UserEntity user=userService.getUserByUsername(name1);
+		String agentinfo = null;
+		String error;
+		ModelAndView mav=new ModelAndView();
+		if (user!=null) {
+			String string=user.getPassword().replaceAll(" ", "");
+			String agentString=user.getClassify();
+			if (string.equals(password1)) {
+
+				if (agentString.equals("supplier")) {
+
+					agentinfo="供应商";
+					
+					//返回supplyAgent的界面
+					mav.setViewName("/supplieragent");
+					mav.addObject("agent", agentinfo);
+				}else if (agentString.equals("manu")) {
+					//显示制造商的库存
+					List<ItemEntity> itemlist = itemService.getAllItem();
+					List<MaterialEntity> materiallist =  materialService.getAllMaterial();
+					agentinfo="制造商";			
+					
+					//返回manuAgent的界面
+					mav.setViewName("/Manualagent");
+					mav.addObject("agent",agentinfo);
+					mav.addObject("materiallist", materiallist);
+					mav.addObject("itemlist", itemlist);
+				}else if (agentString.equals("seller")) {
+					agentinfo="零售商";					
+					//返回sellerAgent的界面
+					mav.setViewName("/selleragent");
+					mav.addObject("agent",agentinfo);
+				}else {
+					error="身份不正确";
+				}
+				
+				mav.addObject("user",user);
+				return mav;
+			} else {
+				System.out.println(user.getPassword()+"___"+password1);
+				error="密码不正确！！";
+				mav.addObject("error", error);
+				mav.setViewName("/userlogin");
+				return mav;		
+			}
+			
+		}else {
+			error="用户不存在！！请注册";
+			mav.addObject("error", error);
+			mav.setViewName("/userlogin");
+			return mav;	
+		}
+		
+		
+	
+	}
+	//获取所有用户
+	@RequestMapping(value="getalluser")
+	public ModelAndView getAllUser() {		
+		List<UserEntity> rst = userService.getAllUser();
+		ModelAndView ma = new ModelAndView();
+		ma.setViewName("/alluser-list");
+		ma.addObject("result", rst);
+		return ma;
+	}
+	
+	//添加和用户
+	@RequestMapping(value="/toadduser")
+	public ModelAndView toadduser(){
+		ModelAndView ma = new ModelAndView();
+		ma.setViewName("/registerUser");
+		return ma;
+	}
+	//注册新用户
+	@RequestMapping(value="/adduser")
+	public ModelAndView adduser(String name,String password,String classify)throws Exception{
+		if(name==null || name.trim().length()==0||password==null || password.trim().length()==0
+				||classify==null || classify.trim().length()==0){
+			ModelAndView ma = new ModelAndView();
+			ma.setViewName("/registerUser");
+			ma.addObject("error", "注册信息不能为空");
+			ma.addObject("name",name);
+			ma.addObject("password",password);
+			ma.addObject("classify",classify);
+			return ma;
+		}
+		userService.addUser(name, password,classify);
+		ModelAndView mav = new ModelAndView();
+		mav.setViewName("/success");
+		return mav;
+	}
+	
+	@RequestMapping("/getEditUser")
+	public String getEditUser(String id,HttpServletRequest request){
+		UserEntity user = userService.getUser(id);
+		request.setAttribute("user", user);
+		return "/editUser";
+	}
+	
+	//删除
+	@RequestMapping(value="/delUser")
+	public ModelAndView delUser(String id){
+		userService.delUser(id);
+		return getAllUser();
+	}
+	@RequestMapping(value="/updateUser")
+	public ModelAndView updateUser(HttpServletRequest request, UserEntity user){
+		if(userService.updateUser(user)){  
+            user = userService.getUser(user.getId());  
+            request.setAttribute("user", user);  
+            return getAllUser();  
+        }else{ 
+        	ModelAndView mav = new ModelAndView();
+    		mav.setViewName("/error");
+    		return mav;
+            
+        }  
+	}
+	
+	
+	
+	}
+	
+	
+	
+	
+
